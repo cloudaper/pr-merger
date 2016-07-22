@@ -39,17 +39,10 @@ module GhPrMerger
   def self.process_pr(pr, client, cmd, base_repo, base_branch, fork_repo)
     head = pr[:head]
     repo = head[:repo]
-    active_repo = if fork_repo
-      fork_repo
-    else
-      base_repo
-    end
+    puts "Attempting to merge #{head[:ref]}."
     client.create_status(base_repo, head[:sha], 'pending', context: APP_CONTEXT, description: 'Merge in progress.')
     begin
-      if repo[:full_name] != active_repo
-        #puts repo[:clone_url]
-        cmd.run "git fetch", repo[:ssh_url], head[:ref]
-      end
+      cmd.run "git fetch", repo[:ssh_url], head[:ref]
       merge_status = cmd.run! 'git merge --no-ff --no-edit', head[:sha]
       if merge_status.failure?
         cmd.run 'git merge --abort'
