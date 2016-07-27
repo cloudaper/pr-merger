@@ -44,7 +44,7 @@ module GhPrMerger
     if pr[:title].include?('[automerge skip]')
       puts "Skipping #{head[:ref]} because of [automerge skip]."
       client.create_status(base_repo, head[:sha], 'failure', context: APP_CONTEXT, description: 'Merge skipped because of [automerge skip].')
-      return
+      return true
     end
     begin
       cmd.run "git fetch", repo[:ssh_url], head[:ref]
