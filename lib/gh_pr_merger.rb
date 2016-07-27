@@ -41,6 +41,11 @@ module GhPrMerger
     repo = head[:repo]
     puts "Attempting to merge #{head[:ref]}."
     client.create_status(base_repo, head[:sha], 'pending', context: APP_CONTEXT, description: 'Merge in progress.')
+    if pr[:title].include?('[automerge skip]')
+      puts "Skipping #{head[:ref]} because of [automerge skip]."
+      client.create_status(base_repo, head[:sha], 'failure', context: APP_CONTEXT, description: 'Merge skipped because of [automerge skip].')
+      return
+    end
     begin
       cmd.run "git fetch", repo[:ssh_url], head[:ref]
       merge_status = cmd.run! 'git merge --no-ff --no-edit', head[:sha]
