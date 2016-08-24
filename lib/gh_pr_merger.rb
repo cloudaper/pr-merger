@@ -47,7 +47,7 @@ module GhPrMerger
       return true
     end
     begin
-      cmd.run "git fetch", repo[:ssh_url], head[:ref]
+      cmd.run "git fetch", repo[:ssh_url], head[:ref] if repo
       merge_status = cmd.run! 'git merge --no-ff --no-edit', head[:sha]
       if merge_status.failure?
         cmd.run 'git merge --abort'
