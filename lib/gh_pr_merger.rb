@@ -13,9 +13,9 @@ module GhPrMerger
     pull_requests = client.pull_requests(base_repo, state: 'open').reverse
     active_branch_result = cmd.run! 'git rev-parse --abbrev-ref HEAD'
     if active_branch_result.failure?
-      previous_branch = cmd.run('cat .git/HEAD')
+      previous_branch = cmd.run('cat .git/HEAD').strip
     else
-      previous_branch = active_branch_result.out
+      previous_branch = active_branch_result.out.strip
     end
     cmd.run 'git checkout', base_branch
 
