@@ -20,10 +20,10 @@ class GhPrMerger
     cmd = TTY::Command.new
     active_branch_result = cmd.run! 'git rev-parse --abbrev-ref HEAD'
 
-    if active_branch_result.failure?
-      previous_branch = cmd.run('cat .git/HEAD').strip
-    else
+    if active_branch_result.success?
       previous_branch = active_branch_result.out.strip
+    else
+      previous_branch = cmd.run('cat .git/HEAD').strip
     end
 
     cmd.run 'git checkout', @base_branch
@@ -57,7 +57,7 @@ class GhPrMerger
     puts "Attempting to merge #{head[:ref]}."
 
     @client.create_status(@base_repo, head[:sha], 'pending', context: APP_CONTEXT,
-                                                           description: 'Merge in progress.')
+                                                             description: 'Merge in progress.')
 
     return true if skip_pr?(pr)
 
@@ -66,19 +66,19 @@ class GhPrMerger
 
       merge_status = cmd.run! 'git merge --no-ff --no-edit', head[:sha]
 
-      if merge_status.failure?
+      if merge_status.success?
+        @client.create_status(@base_repo, head[:sha], 'success', context: APP_CONTEXT,
+                                                                 description: "Merge with '#{base_branch}' was successful.")
+      else
         cmd.run 'git merge --abort'
 
         @client.create_status(@base_repo, head[:sha], 'failure', context: APP_CONTEXT,
-                                                                description: "Failed to merge '#{head[:ref]} with #{@base_branch}. Check for merge conflicts.")
-      else
-        @client.create_status(@base_repo, head[:sha], 'success', context: APP_CONTEXT,
-                                                                description: "Merge with '#{base_branch}' was successful.")
+                                                                 description: "Failed to merge '#{head[:ref]} with #{@base_branch}. Check for merge conflicts.")
       end
     rescue => e
       p e
       @client.create_status(@base_repo, head[:sha], 'error', context: APP_CONTEXT,
-                                                            description: "Merge encountered an error: #{e.class.name}.")
+                                                             description: "Merge encountered an error: #{e.class.name}.")
       return false
     end
 
