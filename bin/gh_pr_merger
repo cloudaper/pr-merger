@@ -1,6 +1,5 @@
 #!/usr/bin/env ruby
 
-require "gh_pr_merger"
+require 'gh_pr_merger'
 
-status = GhPrMerger.run(ARGV[0], ENV['GH_TOKEN'], ARGV[1], ARGV[2], ARGV[3])
-exit status
+exit GhPrMerger.run(ARGV[0], ENV['GH_TOKEN'], ARGV[1], ARGV[2], ARGV[3])
