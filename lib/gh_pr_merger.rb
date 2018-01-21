@@ -74,8 +74,6 @@ class GhPrMerger
         failure_status(pr, message)
       end
     rescue => e
-      p e
-
       failure_status(pr, "Merge encountered an error: #{e.class.name}.")
 
       return false
