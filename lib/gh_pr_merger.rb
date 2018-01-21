@@ -4,6 +4,7 @@ require 'octokit'
 
 Octokit.auto_paginate = true
 
+# Merges all opened GitHub PRs to a new branch
 class GhPrMerger
   APP_CONTEXT    = 'ci/gh_pr_merger'.freeze
   AUTOMERGE_SKIP = '[automerge skip]'.freeze
@@ -55,9 +56,7 @@ class GhPrMerger
     head = pr[:head]
     repo = head[:repo]
 
-    puts "Attempting to merge #{head[:ref]}."
-
-    @gh.create_status(@base_repo, head[:sha], 'pending', context: APP_CONTEXT, description: 'Merge in progress.')
+    pending_status(pr, 'Merge in progress.')
 
     return true if skip_pr?(pr)
 
@@ -67,19 +66,17 @@ class GhPrMerger
       merge_status = cmd.run! 'git merge --no-ff --no-edit', head[:sha]
 
       if merge_status.success?
-        message = "Merge with '#{base_branch}' was successful."
-        @gh.create_status(@base_repo, head[:sha], 'success', context: APP_CONTEXT, description: message)
+        success_status(pr, "Merge with '#{base_branch}' was successful.")
       else
         cmd.run 'git merge --abort'
 
-        message = "Failed to merge '#{head[:ref]} with #{@base_branch}. Check for merge conflicts."
-        @gh.create_status(@base_repo, head[:sha], 'failure', context: APP_CONTEXT, description: message)
+        message = "Failed to merge '#{head[:ref]} with #{@base_branch}."
+        failure_status(pr, message)
       end
     rescue => e
       p e
 
-      message = "Merge encountered an error: #{e.class.name}."
-      @gh.create_status(@base_repo, head[:sha], 'error', context: APP_CONTEXT, description: message)
+      failure_status(pr, "Merge encountered an error: #{e.class.name}.")
 
       return false
     end
@@ -91,12 +88,35 @@ class GhPrMerger
   def skip_pr?(pr)
     return false unless pr[:title].include?(AUTOMERGE_SKIP)
 
-    message "Skipping #{pr[:head][:ref]} because of #{AUTOMERGE_SKIP}."
-
-    puts message
-
-    @gh.create_status(@base_repo, pr[:head][:sha], 'failure', context: APP_CONTEXT, description: message)
+    failure_status(pr, "Skipping #{pr[:head][:ref]}.")
 
     true
+  end
+
+  def pending_status(pr, message)
+    send_status(pr, 'pending', message)
+  end
+
+  def error_status(pr, message)
+    send_status(pr, 'error', message)
+  end
+
+  def failure_status(pr, message)
+    send_status(pr, 'failure', message)
+  end
+
+  def success_status(pr, message)
+    send_status(pr, 'success', message)
+  end
+
+  # Send Octokit status
+  def send_status(pr, status, message)
+    @gh.create_status(
+      @base_repo,
+      pr[:head][:sha],
+      status,
+      context: APP_CONTEXT,
+      description: message
+    )
   end
 end
