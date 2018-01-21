@@ -2,4 +2,6 @@
 
 require 'gh_pr_merger'
 
-exit GhPrMerger.run(ARGV[0], ENV['GH_TOKEN'], ARGV[1], ARGV[2], ARGV[3])
+merger = GhPrMerger.new(access_token: ENV['GH_TOKEN'])
+
+exit merger.run(base_repo: ARGV[0], base_branch: ARGV[1], merge_branch: ARGV[2], fork_repo: ARGV[3])

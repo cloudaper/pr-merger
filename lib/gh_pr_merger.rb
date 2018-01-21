@@ -8,14 +8,15 @@ class GhPrMerger
   APP_CONTEXT    = 'ci/gh_pr_merger'.freeze
   AUTOMERGE_SKIP = '[automerge skip]'.freeze
 
-  def self.run(base_repo, access_token, base_branch, merge_branch, fork_repo)
+  def initialize(access_token:)
+    @gh = Octokit::Client.new(access_token: access_token)
+  end
+
+  def run(base_repo:, base_branch:, merge_branch:, fork_repo:)
     @base_repo   = base_repo
     @base_branch = base_branch
 
-    # GitHub client
-    @client = Octokit::Client.new(access_token: access_token)
-
-    pull_requests = client.pull_requests(@base_repo, state: 'open').reverse
+    pull_requests = @gh.pull_requests(@base_repo, state: 'open').reverse
 
     cmd = TTY::Command.new
     active_branch_result = cmd.run! 'git rev-parse --abbrev-ref HEAD'
@@ -56,8 +57,7 @@ class GhPrMerger
 
     puts "Attempting to merge #{head[:ref]}."
 
-    @client.create_status(@base_repo, head[:sha], 'pending', context: APP_CONTEXT,
-                                                             description: 'Merge in progress.')
+    @gh.create_status(@base_repo, head[:sha], 'pending', context: APP_CONTEXT, description: 'Merge in progress.')
 
     return true if skip_pr?(pr)
 
@@ -67,18 +67,20 @@ class GhPrMerger
       merge_status = cmd.run! 'git merge --no-ff --no-edit', head[:sha]
 
       if merge_status.success?
-        @client.create_status(@base_repo, head[:sha], 'success', context: APP_CONTEXT,
-                                                                 description: "Merge with '#{base_branch}' was successful.")
+        message = "Merge with '#{base_branch}' was successful."
+        @gh.create_status(@base_repo, head[:sha], 'success', context: APP_CONTEXT, description: message)
       else
         cmd.run 'git merge --abort'
 
-        @client.create_status(@base_repo, head[:sha], 'failure', context: APP_CONTEXT,
-                                                                 description: "Failed to merge '#{head[:ref]} with #{@base_branch}. Check for merge conflicts.")
+        message = "Failed to merge '#{head[:ref]} with #{@base_branch}. Check for merge conflicts."
+        @gh.create_status(@base_repo, head[:sha], 'failure', context: APP_CONTEXT, description: message)
       end
     rescue => e
       p e
-      @client.create_status(@base_repo, head[:sha], 'error', context: APP_CONTEXT,
-                                                             description: "Merge encountered an error: #{e.class.name}.")
+
+      message = "Merge encountered an error: #{e.class.name}."
+      @gh.create_status(@base_repo, head[:sha], 'error', context: APP_CONTEXT, description: message)
+
       return false
     end
 
@@ -87,14 +89,14 @@ class GhPrMerger
 
   # Skip a given pull request if it includes automerge skip message
   def skip_pr?(pr)
-    if pr[:title].include?(AUTOMERGE_SKIP)
-      message "Skipping #{pr[:head][:ref]} because of #{AUTOMERGE_SKIP}."
-      puts message
-      @client.create_status(@base_repo, pr[:head][:sha], 'failure', context: APP_CONTEXT, description: message)
+    return false unless pr[:title].include?(AUTOMERGE_SKIP)
 
-      true
-    else
-      false
-    end
+    message "Skipping #{pr[:head][:ref]} because of #{AUTOMERGE_SKIP}."
+
+    puts message
+
+    @gh.create_status(@base_repo, pr[:head][:sha], 'failure', context: APP_CONTEXT, description: message)
+
+    true
   end
 end
