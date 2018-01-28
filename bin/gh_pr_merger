@@ -1,7 +1,80 @@
 #!/usr/bin/env ruby
+$LOAD_PATH << File.expand_path('lib')
 
+require 'optparse'
 require 'gh_pr_merger'
 
-merger = GhPrMerger.new(access_token: ENV['GH_TOKEN'])
+def show_version
+  puts "gh_pr_merger v#{GhPrMerger::VERSION}"
 
-exit merger.run(base_repo: ARGV[0], base_branch: ARGV[1], merge_branch: ARGV[2], fork_repo: ARGV[3])
+  exit 0
+end
+
+def show_help
+  puts <<~HELP
+    Usage: gh_pr_merger --access-token TOKEN --base-repo REPO --base-branch BRANCH --merge-branch BRANCH [--fork-repo]
+  HELP
+
+  exit 0
+end
+
+options = {}
+
+parser = OptionParser.new do|opts|
+  opts.banner = "Usage: gh_pr_merger [options]"
+
+  opts.on('--access-token TOKEN') do |option|
+    options[:access_token] = option
+  end
+
+  opts.on('--base-repo REPO') do |option|
+    options[:base_repo] = option
+  end
+
+  opts.on('--base-branch BRANCH') do |option|
+    options[:base_branch] = option
+  end
+
+  opts.on('--merge-branch BRANCH') do |option|
+    options[:merge_branch] = option
+  end
+
+  opts.on('--fork-repo') do
+    options[:fork_repo] = true
+  end
+
+  opts.on('-v', '--version') do
+    show_version
+  end
+
+  opts.on('--debug') do
+    options[:debug] = true
+  end
+
+  opts.on('-h', '--help') do
+    show_help
+  end
+end
+
+begin
+  parser.parse!
+
+  show_help if options.empty?
+
+  merger = GhPrMerger::Merger.new(access_token: options[:access_token])
+
+  exit merger.run(base_repo:    options[:base_repo],
+                  base_branch:  options[:base_branch],
+                  merge_branch: options[:merge_branch],
+                  fork_repo:    options[:fork_repo])
+
+rescue => e
+  STDERR.puts "ERROR: #{e.message}"
+
+  if options[:debug]
+    STDERR.puts
+    STDERR.puts e.backtrace
+  end
+
+  exit 1
+end
