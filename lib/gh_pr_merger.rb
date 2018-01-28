@@ -67,7 +67,7 @@ module GhPrMerger
         merge_status = cmd.run! 'git merge --no-ff --no-edit', head[:sha]
 
         if merge_status.success?
-          success_status(pr, "Merge with '#{base_branch}' was successful.")
+          success_status(pr, "Merge with '#{@base_branch}' was successful.")
         else
           cmd.run 'git merge --abort'
 
@@ -75,7 +75,7 @@ module GhPrMerger
           failure_status(pr, message)
         end
       rescue => e
-        failure_status(pr, "Merge encountered an error: #{e.class.name}.")
+        failure_status(pr, "Merge encountered an error: #{e.message}.")
 
         return false
       end
