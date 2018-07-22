@@ -115,7 +115,7 @@ module GhPrMerger
         pr[:head][:sha],
         status,
         context: APP_CONTEXT,
-        description: message
+        description: message[0..140]
       )
     end
   end
