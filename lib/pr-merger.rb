@@ -7,7 +7,7 @@ Octokit.auto_paginate = true
 # Merges all opened GitHub PRs to a new branch
 module PrMerger
   class Merger
-    APP_CONTEXT    = 'ci/pr-merger'.freeze
+    APP_CONTEXT    = 'pr-merger'.freeze
     SKIP_MERGE = '[skip merge]'.freeze
 
     def initialize(access_token:)
