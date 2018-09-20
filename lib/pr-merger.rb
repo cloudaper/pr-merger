@@ -1,14 +1,14 @@
-require 'gh_pr_merger/version'
+require 'pr-merger/version'
 require 'tty-command'
 require 'octokit'
 
 Octokit.auto_paginate = true
 
 # Merges all opened GitHub PRs to a new branch
-module GhPrMerger
+module PrMerger
   class Merger
-    APP_CONTEXT    = 'ci/gh_pr_merger'.freeze
-    AUTOMERGE_SKIP = '[automerge skip]'.freeze
+    APP_CONTEXT    = 'pr-merger'.freeze
+    SKIP_MERGE = '[skip merge]'.freeze
 
     def initialize(access_token:)
       @gh = Octokit::Client.new(access_token: access_token)
@@ -83,9 +83,9 @@ module GhPrMerger
       true
     end
 
-    # Skip a given pull request if it includes automerge skip message
+    # Skip a given pull request if it includes skip merge message
     def skip_pr?(pr)
-      return false unless pr[:title].include?(AUTOMERGE_SKIP)
+      return false unless pr[:title].include?(SKIP_MERGE)
 
       failure_status(pr, "Skipping #{pr[:head][:ref]}.")
 
