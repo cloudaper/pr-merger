@@ -8,7 +8,7 @@ Octokit.auto_paginate = true
 module PrMerger
   class Merger
     APP_CONTEXT    = 'ci/pr-merger'.freeze
-    AUTOMERGE_SKIP = '[automerge skip]'.freeze
+    SKIP_MERGE = '[skip merge]'.freeze
 
     def initialize(access_token:)
       @gh = Octokit::Client.new(access_token: access_token)
@@ -83,9 +83,9 @@ module PrMerger
       true
     end
 
-    # Skip a given pull request if it includes automerge skip message
+    # Skip a given pull request if it includes skip merge message
     def skip_pr?(pr)
-      return false unless pr[:title].include?(AUTOMERGE_SKIP)
+      return false unless pr[:title].include?(SKIP_MERGE)
 
       failure_status(pr, "Skipping #{pr[:head][:ref]}.")
 
