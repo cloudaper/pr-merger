@@ -1,3 +1,3 @@
-module GhPrMerger
+module PrMerger
   VERSION = '0.2.0'.freeze
 end

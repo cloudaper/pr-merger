@@ -1,16 +1,16 @@
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'gh_pr_merger/version'
+require 'pr-merger/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = 'gh_pr_merger'
-  spec.version       = GhPrMerger::VERSION
+  spec.name          = 'pr-merger'
+  spec.version       = PrMerger::VERSION
   spec.authors       = ['Tibor Szolár', 'Josef Strzibny']
   spec.email         = ['tibor.szolar@seznam.cz', 'strzibny@strzibny.name']
 
   spec.summary       = %q{Merges all opened GitHub PRs to a new branch.}
   spec.description   = %q{}
-  spec.homepage      = 'https://github.com/cloudaper/gh_pr_merger'
+  spec.homepage      = 'https://github.com/cloudaper/pr-merger'
   spec.license       = 'MIT'
 
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }

@@ -1,13 +1,13 @@
-require 'gh_pr_merger/version'
+require 'pr-merger/version'
 require 'tty-command'
 require 'octokit'
 
 Octokit.auto_paginate = true
 
 # Merges all opened GitHub PRs to a new branch
-module GhPrMerger
+module PrMerger
   class Merger
-    APP_CONTEXT    = 'ci/gh_pr_merger'.freeze
+    APP_CONTEXT    = 'ci/pr-merger'.freeze
     AUTOMERGE_SKIP = '[automerge skip]'.freeze
 
     def initialize(access_token:)

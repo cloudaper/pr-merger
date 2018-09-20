@@ -2,17 +2,17 @@
 $LOAD_PATH << File.expand_path('lib')
 
 require 'optparse'
-require 'gh_pr_merger'
+require 'pr-merger'
 
 def show_version
-  puts "gh_pr_merger v#{GhPrMerger::VERSION}"
+  puts "pr-merger v#{PrMerger::VERSION}"
 
   exit 0
 end
 
 def show_help
   puts <<~HELP
-    Usage: gh_pr_merger --access-token TOKEN --base-repo REPO --base-branch BRANCH --merge-branch BRANCH [--fork-repo]
+    Usage: pr-merger --access-token TOKEN --base-repo REPO --base-branch BRANCH --merge-branch BRANCH [--fork-repo]
   HELP
 
   exit 0
@@ -21,7 +21,7 @@ end
 options = {}
 
 parser = OptionParser.new do|opts|
-  opts.banner = "Usage: gh_pr_merger [options]"
+  opts.banner = "Usage: pr-merger [options]"
 
   opts.on('--access-token TOKEN') do |option|
     options[:access_token] = option
@@ -61,7 +61,7 @@ begin
 
   show_help if options.empty?
 
-  merger = GhPrMerger::Merger.new(access_token: options[:access_token])
+  merger = PrMerger::Merger.new(access_token: options[:access_token])
 
   exit merger.run(base_repo:    options[:base_repo],
                   base_branch:  options[:base_branch],
